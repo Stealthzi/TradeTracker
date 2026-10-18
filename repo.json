@@ -3,7 +3,7 @@
         "Author":  "Stealthzi",
         "Name":  "Trade Tracker",
         "InternalName":  "TradeTracker",
-        "AssemblyVersion":  "1.0.1.0",
+        "AssemblyVersion":  "1.0.2.0",
         "Description":  "Records every completed player-to-player trade: the other player, their world, gil given and received, and the items that changed hands. Open the log with /trades to see per-person totals and full history.",
         "ApplicableVersion":  "any",
         "RepoUrl":  "https://github.com/Stealthzi/TradeTracker",
@@ -20,9 +20,9 @@
         "LoadPriority":  0,
         "Punchline":  "Keeps a log of who you trade with and how much.",
         "AcceptsFeedback":  true,
-        "DownloadLinkInstall":  "https://github.com/Stealthzi/TradeTracker/releases/download/v1.0.1.0/latest.zip",
-        "DownloadLinkUpdate":  "https://github.com/Stealthzi/TradeTracker/releases/download/v1.0.1.0/latest.zip",
-        "DownloadLinkTesting":  "https://github.com/Stealthzi/TradeTracker/releases/download/v1.0.1.0/latest.zip",
-        "LastUpdate":  1792340495
+        "DownloadLinkInstall":  "https://github.com/Stealthzi/TradeTracker/releases/download/v1.0.2.0/latest.zip",
+        "DownloadLinkUpdate":  "https://github.com/Stealthzi/TradeTracker/releases/download/v1.0.2.0/latest.zip",
+        "DownloadLinkTesting":  "https://github.com/Stealthzi/TradeTracker/releases/download/v1.0.2.0/latest.zip",
+        "LastUpdate":  1792342080
     }
 ]

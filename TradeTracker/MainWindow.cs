@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -15,6 +16,8 @@ public sealed class MainWindow : Window
     private static readonly string[] SortNames = ["Last traded", "Most trades", "Most gil given", "Most gil received", "Name"];
     private static readonly Vector4 Green = new(0.45f, 0.85f, 0.45f, 1f);
     private static readonly Vector4 Red = new(0.95f, 0.45f, 0.45f, 1f);
+    private static readonly Vector4 TargetText = new(1f, 0.85f, 0.35f, 1f);
+    private static readonly Vector4 TargetRow = new(0.85f, 0.65f, 0.15f, 0.30f);
 
     private readonly TradeStore store;
     private readonly Configuration config;
@@ -22,6 +25,9 @@ public sealed class MainWindow : Window
     private string search = string.Empty;
     private int sortMode;
     private bool jumpToHistory;
+    private PlayerName? target;
+    private PlayerName? lastTarget;
+    private bool scrollToTarget;
 
     public MainWindow(TradeStore store, Configuration config)
         : base("Trade Tracker###TradeTracker")
@@ -43,8 +49,24 @@ public sealed class MainWindow : Window
         public long Net => GilReceived - GilGiven;
     }
 
+    private sealed record PlayerName(string Name, string World)
+    {
+        // Older entries can lack a world if the partner wasn't loaded nearby; match those on name alone.
+        public bool Matches(string name, string world) =>
+            Name == name && (world.Length == 0 || World.Length == 0 || World == world);
+    }
+
     public override void Draw()
     {
+        target = Plugin.TargetManager.Target is IPlayerCharacter pc
+            ? new PlayerName(pc.Name.TextValue, pc.HomeWorld.ValueNullable?.Name.ExtractText() ?? string.Empty)
+            : null;
+        if (target != lastTarget)
+        {
+            scrollToTarget = target != null;
+            lastTarget = target;
+        }
+
         var trades = Filtered();
         DrawToolbar(trades);
         ImGui.Separator();
@@ -168,16 +190,29 @@ public sealed class MainWindow : Window
 
         foreach (var p in people)
         {
+            var targeted = target?.Matches(p.Name, p.World) == true;
             ImGui.TableNextRow();
+            if (targeted)
+                ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg1, ImGui.GetColorU32(TargetRow));
+
             ImGui.TableNextColumn();
-            if (ImGui.Selectable($"{p.Name}##{p.Key}", false, ImGuiSelectableFlags.SpanAllColumns))
+            bool clicked;
+            using (ImRaii.PushColor(ImGuiCol.Text, TargetText, targeted))
+                clicked = ImGui.Selectable($"{p.Name}##{p.Key}", false, ImGuiSelectableFlags.SpanAllColumns);
+            if (clicked)
             {
                 search = p.Name;
                 jumpToHistory = true;
             }
 
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Show every trade with this player");
+                ImGui.SetTooltip(targeted ? "Your current target. Click to see every trade with them" : "Show every trade with this player");
+
+            if (targeted && scrollToTarget)
+            {
+                ImGui.SetScrollHereY(0.5f);
+                scrollToTarget = false;
+            }
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(p.World);
@@ -219,6 +254,9 @@ public sealed class MainWindow : Window
         foreach (var t in trades.OrderByDescending(t => t.Time))
         {
             ImGui.TableNextRow();
+            if (target?.Matches(t.PartnerName, t.PartnerWorld) == true)
+                ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg1, ImGui.GetColorU32(TargetRow));
+
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(t.Time.LocalDateTime.ToString("yyyy-MM-dd HH:mm"));
             if (showMine)
