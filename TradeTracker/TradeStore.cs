@@ -61,7 +61,13 @@ public sealed class TradeStore
         return csvPath;
     }
 
-    private static string Csv(string value) => $"\"{value.Replace("\"", "\"\"")}\"";
+    private static string Csv(string value)
+    {
+        // A cell starting with = + - @ would run as a formula when opened in Excel or Sheets.
+        if (value.Length > 0 && "=+-@\t\r".Contains(value[0]))
+            value = "'" + value;
+        return $"\"{value.Replace("\"", "\"\"")}\"";
+    }
 
     private void Load()
     {
@@ -76,8 +82,15 @@ public sealed class TradeStore
         {
             // Keep the unreadable file around rather than overwriting someone's history on the next save.
             var backup = $"{path}.unreadable-{DateTime.Now:yyyyMMdd-HHmmss}";
-            File.Copy(path, backup, true);
-            Plugin.Log.Error(ex, $"Could not read trades.json, copied it to {backup} and started a new log");
+            try
+            {
+                File.Copy(path, backup, true);
+                Plugin.Log.Error(ex, $"Could not read trades.json, copied it to {backup} and started a new log");
+            }
+            catch (Exception copyEx)
+            {
+                Plugin.Log.Error(copyEx, "Could not read trades.json or back it up");
+            }
         }
     }
 

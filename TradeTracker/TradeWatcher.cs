@@ -216,7 +216,7 @@ public sealed unsafe class TradeWatcher : IDisposable
         foreach (var type in CountedInventories)
         {
             var container = im->GetInventoryContainer(type);
-            if (container == null || !container->IsLoaded)
+            if (container == null || !container->IsLoaded || container->Items == null)
                 continue;
 
             for (var i = 0; i < container->Size; i++)

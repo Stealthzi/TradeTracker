@@ -230,9 +230,9 @@ public sealed class MainWindow : Window
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(t.PartnerKey);
             ImGui.TableNextColumn();
-            ImGui.TextWrapped(t.DescribeGiven());
+            Wrapped(t.DescribeGiven());
             ImGui.TableNextColumn();
-            ImGui.TextWrapped(t.DescribeReceived());
+            Wrapped(t.DescribeReceived());
             ImGui.TableNextColumn();
             if (ImGui.SmallButton($"Delete##{t.Id}") && ImGui.GetIO().KeyCtrl)
                 toDelete = t;
@@ -242,5 +242,13 @@ public sealed class MainWindow : Window
 
         if (toDelete != null)
             store.Remove(toDelete);
+    }
+
+    // Names come from the game, so never pass them as an ImGui format string; wrap unformatted text instead.
+    private static void Wrapped(string text)
+    {
+        ImGui.PushTextWrapPos(0);
+        ImGui.TextUnformatted(text);
+        ImGui.PopTextWrapPos();
     }
 }
